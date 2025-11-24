@@ -1,72 +1,63 @@
 package com.example.expensenote
 
-import androidx.appcompat.app.AppCompatActivity
+import android.graphics.Color
 import android.os.Bundle
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
-import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import com.github.mikephil.charting.charts.PieChart
+import com.github.mikephil.charting.data.PieData
+import com.github.mikephil.charting.data.PieDataSet
+import com.github.mikephil.charting.data.PieEntry
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var etAmount: EditText
-    private lateinit var etNote: EditText
-    private lateinit var btnAdd: Button
-    private lateinit var btnClear: Button
-    private lateinit var tvLastItem: TextView
-    private lateinit var tvTotal: TextView
-
-    private var total: Double = 0.0  // เก็บยอดรวมค่าใช้จ่ายวันนี้
+    private lateinit var pieChart: PieChart
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // ต้องเป็น layout ที่มี PieChart จริง ๆ
         setContentView(R.layout.activity_main)
 
-        // ผูกตัวแปรกับ view
-        etAmount = findViewById<EditText>(R.id.etAmount)
-        etNote = findViewById<EditText>(R.id.etNote)
-        btnAdd = findViewById<Button>(R.id.btnAdd)
-        btnClear = findViewById<Button>(R.id.btnClear)
-        tvLastItem = findViewById<TextView>(R.id.tvLastItem)
-        tvTotal = findViewById<TextView>(R.id.tvTotal)
+        pieChart = findViewById(R.id.pieChart)
 
-        // ปุ่มเพิ่มรายการ
-        btnAdd.setOnClickListener {
-            val amountText = etAmount.text.toString().trim()
-            val noteText = etNote.text.toString().trim()
+        setupDonutChart()
+    }
 
-            if (amountText.isEmpty()) {
-                Toast.makeText(this, "กรุณากรอกจำนวนเงิน", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+    private fun setupDonutChart() {
+        // 1) เตรียมข้อมูล (ห้ามว่าง)
+        val entries = ArrayList<PieEntry>()
+        entries.add(PieEntry(120f, "อาหาร"))
+        entries.add(PieEntry(80f, "เดินทาง"))
+        entries.add(PieEntry(50f, "ช้อปปิ้ง"))
+        entries.add(PieEntry(30f, "อื่น ๆ"))
 
-            // แปลงเป็น Double
-            val amount = amountText.toDoubleOrNull()
-            if (amount == null) {
-                Toast.makeText(this, "กรุณากรอกจำนวนเงินเป็นตัวเลข", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+        // 2) สร้าง DataSet
+        val dataSet = PieDataSet(entries, "")
+        dataSet.colors = listOf(
+            Color.parseColor("#81C784"), // เขียวอ่อน
+            Color.parseColor("#64B5F6"), // ฟ้า
+            Color.parseColor("#FFB74D"), // ส้ม
+            Color.parseColor("#E57373")  // แดงอ่อน
+        )
+        dataSet.valueTextColor = Color.WHITE
+        dataSet.valueTextSize = 12f
 
-            // อัปเดตยอดรวม
-            total += amount
+        // 3) สร้าง Data
+        val data = PieData(dataSet)
 
-            // อัปเดต TextView แสดงผล
-            val showNote = if (noteText.isNotEmpty()) noteText else "ไม่ระบุ"
-            tvLastItem.text = "รายการล่าสุด: $showNote - %.2f บาท".format(amount)
-            tvTotal.text = "ยอดรวมวันนี้: %.2f บาท".format(total)
+        // 4) เซ็ต data ให้กราฟ
+        pieChart.data = data
 
-            // เคลียร์ช่องจำนวนเงิน (ให้พิมพ์รายการต่อไปสะดวก)
-            etAmount.text.clear()
-            etNote.text.clear()
-        }
+        // 5) ตั้งให้เป็น donut
+        pieChart.isDrawHoleEnabled = true
+        pieChart.holeRadius = 60f
+        pieChart.transparentCircleRadius = 65f
+        pieChart.setHoleColor(Color.parseColor("#FAFAFA"))
 
-        // ปุ่มเคลียร์ทั้งหมด
-        btnClear.setOnClickListener {
-            total = 0.0
-            etAmount.text.clear()
-            etNote.text.clear()
-            tvLastItem.text = "รายการล่าสุด: -"
-            tvTotal.text = "ยอดรวมวันนี้: 0.00 บาท"
-        }
+        pieChart.description.isEnabled = false
+        pieChart.setDrawEntryLabels(false)
+        pieChart.legend.isEnabled = true
+
+        // 6) รีเฟรชกราฟ
+        pieChart.invalidate()
     }
 }
